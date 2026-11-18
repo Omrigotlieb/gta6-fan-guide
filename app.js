@@ -1,12 +1,12 @@
 (function(){
-  // Countdown to Israel unlock (00:00 Thu 19 Nov 2026 IST = 22:00 UTC Nov 18)
+  // Live status: midnight local on Thu 19 Nov 2026 (rolling worldwide unlock)
   var el=document.getElementById('cd'),lb=document.getElementById('cd-label');
-  var target=Date.UTC(2026,10,18,22,0,0);
+  var target=new Date(2026,10,19,0,0,0);
   function tick(){var d=target-Date.now();
-    if(d<=0){lb.textContent='Status';el.textContent='Unlocked in Israel · Nov 19';el.parentNode.classList.add('live');if(timer)clearInterval(timer);return}
-    var h=Math.floor(d/36e5),m=Math.floor(d%36e5/6e4),s=Math.floor(d%6e4/1e3);
-    lb.textContent='Unlocks in Israel (00:00 IST) in';
-    el.textContent=h+'h '+('0'+m).slice(-2)+'m '+('0'+s).slice(-2)+'s'}
+    if(d<=0){lb.textContent='Status';el.textContent='OUT NOW on PS5 & Xbox Series X|S';el.parentNode.classList.add('live');if(timer)clearInterval(timer);return}
+    var h=Math.floor(d/36e5),m=Math.floor(d%36e5/6e4);
+    lb.textContent='Launch';
+    el.textContent='Unlocks in '+h+'h '+m+'m — midnight your time, Thu 19 Nov'}
   var timer=null;if(el){tick();if(target-Date.now()>0)timer=setInterval(tick,1000)}
 
   // Rumor filter + search
