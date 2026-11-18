@@ -3,11 +3,11 @@
   var el=document.getElementById('cd'),lb=document.getElementById('cd-label');
   var target=Date.UTC(2026,10,18,22,0,0);
   function tick(){var d=target-Date.now();
-    if(d<=0){lb.textContent='Status';el.textContent='Unlocked in Israel · Nov 19';return}
+    if(d<=0){lb.textContent='Status';el.textContent='Unlocked in Israel · Nov 19';el.parentNode.classList.add('live');if(timer)clearInterval(timer);return}
     var h=Math.floor(d/36e5),m=Math.floor(d%36e5/6e4),s=Math.floor(d%6e4/1e3);
     lb.textContent='Unlocks in Israel (00:00 IST) in';
     el.textContent=h+'h '+('0'+m).slice(-2)+'m '+('0'+s).slice(-2)+'s'}
-  if(el){tick();setInterval(tick,1000)}
+  var timer=null;if(el){tick();if(target-Date.now()>0)timer=setInterval(tick,1000)}
 
   // Rumor filter + search
   var chips=document.querySelectorAll('.chip'),rows=[].slice.call(document.querySelectorAll('.rumor-table tbody tr')),rq=document.getElementById('rq'),rc=document.getElementById('rcount'),cur='all';
@@ -32,14 +32,31 @@
   tabs.forEach(function(t,i){t.tabIndex=i?-1:0;t.addEventListener('click',function(){sel(i)});
     t.addEventListener('keydown',function(e){if(e.key==='ArrowRight')sel((i+1)%tabs.length,1);else if(e.key==='ArrowLeft')sel((i-1+tabs.length)%tabs.length,1)})});
 
-  // Lazy posters for non-featured videos
-  var vids=[].slice.call(document.querySelectorAll('video[data-poster]'));
-  function setp(v){if(v.dataset.poster){v.poster=v.dataset.poster;delete v.dataset.poster}}
-  if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){setp(e.target);io.unobserve(e.target)}})},{rootMargin:'300px'});vids.forEach(function(v){io.observe(v)})}else{vids.forEach(setp)}
+  // Click-to-play highlight cards: the video element is only created when asked for
+  [].slice.call(document.querySelectorAll('a.clip-play')).forEach(function(a){
+    a.addEventListener('click',function(e){
+      if(e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;
+      e.preventDefault();
+      var m=a.parentNode,v=document.createElement('video');
+      v.controls=true;v.autoplay=true;v.playsInline=true;v.preload='auto';v.src=a.getAttribute('href');v.setAttribute('aria-label',a.dataset.title||'Highlight clip');
+      var d=m.querySelector('.clip-dur');if(d)d.remove();
+      m.replaceChild(v,a);v.focus({preventScroll:true});
+    })});
   // Pause other videos when one plays
   document.addEventListener('play',function(e){document.querySelectorAll('video').forEach(function(v){if(v!==e.target)v.pause()})},true);
 
+  // Mobile menu
+  var btn=document.querySelector('.menu-btn'),menu=document.getElementById('menu');
+  function setMenu(open){if(!btn)return;menu.classList.toggle('open',open);btn.setAttribute('aria-expanded',open);btn.lastElementChild.textContent=open?'Close':'Menu'}
+  if(btn){btn.hidden=false;
+    btn.addEventListener('click',function(){setMenu(!menu.classList.contains('open'))});
+    menu.addEventListener('click',function(e){if(e.target.closest('a'))setMenu(false)});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&menu.classList.contains('open')){setMenu(false);btn.focus()}});
+    document.addEventListener('click',function(e){if(menu.classList.contains('open')&&!e.target.closest('.nav'))setMenu(false)});
+    window.addEventListener('resize',function(){if(window.innerWidth>=1240)setMenu(false)})}
+
   // Active nav link
   var links=[].slice.call(document.querySelectorAll('#menu a')),secs=links.map(function(a){return document.querySelector(a.getAttribute('href'))});
-  if('IntersectionObserver' in window){var no=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var i=secs.indexOf(e.target);links.forEach(function(l,k){l.classList.toggle('on',k===i)});if(i>-1)links[i].scrollIntoView({block:'nearest',inline:'center'})}})},{rootMargin:'-30% 0px -60% 0px'});secs.forEach(function(s){s&&no.observe(s)})}
+  function reveal(l){if(menu.scrollWidth>menu.clientWidth&&getComputedStyle(menu).display==='flex'){menu.scrollLeft=l.offsetLeft-(menu.clientWidth-l.offsetWidth)/2}}
+  if('IntersectionObserver' in window){var no=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var i=secs.indexOf(e.target);links.forEach(function(l,k){l.classList.toggle('on',k===i);if(k===i)l.setAttribute('aria-current','true');else l.removeAttribute('aria-current')});if(i>-1)reveal(links[i])}})},{rootMargin:'-30% 0px -60% 0px'});secs.forEach(function(s){s&&no.observe(s)})}
 })();
